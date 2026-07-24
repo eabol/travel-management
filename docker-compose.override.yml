@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: travel_api_dev
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-travel_db}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    networks:
+      - travel_net
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: travel_web_dev
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - travel_net

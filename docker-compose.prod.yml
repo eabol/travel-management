@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: travel_api_prod
+    restart: always
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - travel_net
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: travel_web_prod
+    restart: always
+    ports:
+      - "${WEB_PORT:-80}:80"
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - api
+    networks:
+      - travel_net
