@@ -49,6 +49,8 @@
 - [x] Pipeline de Integración Continua (`.gitlab-ci.yml`) (Sección 7)
   - [x] Crear el archivo `.gitlab-ci.yml` en la raíz del repositorio.
   - [x] Definir los 3 stages obligatorios: `lint/test`, `build`, `deploy`.
-  - [x] Stage `lint/test`: Ejecutar suite de pruebas TDD en backend y frontend (bloquea el pipeline en caso de fallo).
+  - [x] Stage `lint/test`: Ejecutar suite de pruebas TDD en backend y frontend.
   - [x] Stage `build`: Construir imágenes Docker con `docker build`.
   - [x] Stage `deploy`: Despliegue simulado con `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`.
+- [x] Colección de Pruebas Postman
+  - [x] Crear la colección Postman v2.1.0 en `docs/postman_collection.json` incluyendo peticiones para API Externa e Interna RBAC.
