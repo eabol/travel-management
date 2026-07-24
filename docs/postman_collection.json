@@ -1,0 +1,284 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0123456789ab",
+    "name": "Travel Expense Management System API",
+    "description": "Colección completa de Postman v2.1.0 para probar las APIs del Sistema de Gestión de Viáticos (API Externa Mock e API Interna con RBAC).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "5.1 API Externa Institucional (Mock)",
+      "item": [
+        {
+          "name": "Register External User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"johndoe@institution.gob.ec\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/external/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "external", "users"]
+            },
+            "description": "Endpoint para registro de nuevo usuario externo. Devuelve UUID y apiToken."
+          }
+        },
+        {
+          "name": "External Login (Obtain JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@institution.gob.ec\",\n  \"password\": \"AdminPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/external/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "external", "login"]
+            },
+            "description": "Endpoint de login para obtener token de sesión JWT. Guarda automáticamente el token en la variable {{jwtToken}}."
+          }
+        },
+        {
+          "name": "Record External Audit Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\",\n  \"action\": \"USER_LOGIN\",\n  \"details\": {\n    \"ip\": \"127.0.0.1\",\n    \"browser\": \"Chrome\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/external/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "external", "audit"]
+            },
+            "description": "Endpoint de bitácora para recibir y almacenar registros de actividad."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5.2 API Interna de Viáticos & RBAC",
+      "item": [
+        {
+          "name": "Create Travel Expense (Draft)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"Guayaquil\",\n  \"amount\": 350.00,\n  \"startDate\": \"2026-09-01T08:00:00Z\",\n  \"endDate\": \"2026-09-05T18:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/travel-expenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "travel-expenses"]
+            },
+            "description": "Crea una nueva solicitud de viáticos en estado 'Draft'. (Requiere rol requester o admin)"
+          }
+        },
+        {
+          "name": "Update Travel Expense (Draft status only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"Manta\",\n  \"amount\": 400.00,\n  \"status\": \"Submitted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/travel-expenses/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "travel-expenses", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REPLACE_WITH_EXPENSE_ID"
+                }
+              ]
+            },
+            "description": "Permite editar solicitudes únicamente si pertenecen al requester y están en estado Draft."
+          }
+        },
+        {
+          "name": "List Travel Expenses (RBAC Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/travel-expenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "travel-expenses"]
+            },
+            "description": "Lista solicitudes. Filtra dinámicamente según el rol (requester ve las suyas, approver ve Submitted, admin ve todas)."
+          }
+        },
+        {
+          "name": "Update Travel Expense Status (Approve / Reject)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/travel-expenses/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "travel-expenses", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REPLACE_WITH_EXPENSE_ID"
+                }
+              ]
+            },
+            "description": "Permite a approver y admin cambiar el estado a Approved o Rejected. Dispara evento a audit_logs."
+          }
+        },
+        {
+          "name": "Get Audit Logs (Admin only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "audit"]
+            },
+            "description": "Recupera la bitácora general de auditoría. Acceso exclusivo para rol admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica que el servidor Express esté activo."
+          }
+        }
+      ]
+    }
+  ]
+}
