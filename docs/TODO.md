@@ -1,0 +1,54 @@
+# TODO - Sistema de Gestión de Viáticos
+
+- [x] Configuración de infraestructura base con Docker en la raíz del monorepo
+  - [x] Crear `Dockerfile` y `Dockerfile.prod` para backend y frontend.
+  - [x] Crear `docker-compose.yml` base definiendo servicio `db` (PostgreSQL 15+) montando `./backend/database/init` en `/docker-entrypoint-initdb.d/`.
+  - [x] Crear `docker-compose.override.yml` para entorno de desarrollo.
+  - [x] Crear `docker-compose.prod.yml` para entorno de producción.
+- [x] Esquema de Base de Datos
+  - [x] Crear `backend/database/init/schema.sql` con extensión `uuid-ossp`.
+  - [x] Crear tablas: `users`, `roles`, `user_roles`, `travel_expenses` y `audit_logs` con UUIDs, `TIMESTAMPTZ` y FKs `ON DELETE CASCADE`.
+  - [x] Agregar restricciones `CHECK` para estados: `'Draft'`, `'Submitted'`, `'Approved'`, `'Rejected'`.
+  - [x] Incluir script seed para roles por defecto (`admin`, `requester`, `approver`) y usuarios por defecto con claves Argon2id.
+- [x] Backend con Arquitectura Modular y TDD (Mock API Sección 5.1)
+  - [x] Desarrollar con TDD los endpoints mock externos:
+    - [x] `POST /api/v1/external/users` (Creación de usuario y entrega de API Token).
+    - [x] `POST /api/v1/external/login` (Autenticación y retorno de JWT).
+    - [x] `POST /api/v1/external/audit` (Recepción de evento de auditoría).
+  - [x] Estructurar backend modularmente: `backend/src/index.ts`, `backend/src/bin/www.ts` y módulo `backend/src/api/external/` con `routes.ts` y `controller.ts`.
+  - [x] Integrar middlewares de seguridad (`helmet` y `express-rate-limit`) y manejador global de errores en `index.ts`.
+  - [x] Crear suite de pruebas `backend/tests/externalApi.test.ts` con patrón AAA y validaciones Caja Negra (200, 201, 400, 401).
+  - [x] Implementar controladores mock para pasar las pruebas en verde.
+- [x] API Interna de Viáticos Protegida por JWT y RBAC (Sección 5.2 & 6)
+  - [x] Implementar middlewares de autenticación JWT `authenticateJwt` y autorización RBAC `authorizeRoles` en `backend/src/middleware/auth.ts`.
+  - [x] Crear endpoints protegidos:
+    - [x] `POST /api/v1/travel-expenses` (Creación de solicitud en estado 'Draft').
+    - [x] `PUT /api/v1/travel-expenses/:id` (Edición permitida únicamente para requester en estado 'Draft' y sus propios viáticos).
+    - [x] `GET /api/v1/travel-expenses` (Filtrado por rol: requester solo las suyas, approver solo Submitted, admin todas).
+    - [x] `PATCH /api/v1/travel-expenses/:id/status` (Cambio de estado a Approved/Rejected por approver/admin disparando evento de auditoría).
+    - [x] `GET /api/v1/audit` (Lectura exclusiva para admin).
+  - [x] Validar payload con `Joi` en controladores (`destination`, `amount` positivo, `startDate` y `endDate`).
+  - [x] Escribir suite de pruebas TDD en `backend/tests/travelExpensesApi.test.ts` (12/12 tests en verde).
+- [x] Documentación Interactiva Swagger (OpenAPI 3.0)
+  - [x] Instalar `swagger-ui-express` y `swagger-jsdoc`.
+  - [x] Crear configuración en `backend/src/config/swagger.ts`.
+  - [x] Agregar anotaciones OpenAPI JSDoc en todas las rutas de la API Externa e Interna.
+  - [x] Exponer la interfaz interactiva de Swagger UI en las rutas `/docs` y `/api-docs`.
+- [x] Arquitectura Base del Frontend (Vue 3 + Vuetify)
+  - [x] Configurar Vuetify 3 con temas de Material Design 3 (MD3) e íconos `@mdi/font` en `frontend/src/plugins/vuetify.ts`.
+  - [x] Estructurar carpetas bajo el patrón Smart/Dumb Components (`src/components/smart/` y `src/components/dumb/`).
+  - [x] Crear componente Dumb `BaseButton.vue` con `<script setup lang="ts">`, props tipadas, eventos emit y accesibilidad WAI-ARIA (`role="button"`, `aria-label`).
+  - [x] Crear componente Smart `ExpenseFormSmart.vue` orquestando componentes Dumb.
+  - [x] Escribir suite de pruebas unitarias en `frontend/src/__tests__/BaseButton.spec.ts` aplicando patrón AAA y Caja Negra (3/3 tests en verde).
+- [x] Módulo de Autenticación en Frontend y Redirección a Home
+  - [x] Crear store `useAuthStore` en `frontend/src/stores/auth.ts`.
+  - [x] Crear vista de Login en `frontend/src/views/LoginView.vue` con MD3 Expressive Design.
+  - [x] Crear vista Home en `frontend/src/views/HomeView.vue`.
+  - [x] Configurar Navigation Guards en `router/index.ts`.
+  - [x] Configurar proxy `/api` en `frontend/vite.config.ts`.
+- [x] Pipeline de Integración Continua (`.gitlab-ci.yml`) (Sección 7)
+  - [x] Crear el archivo `.gitlab-ci.yml` en la raíz del repositorio.
+  - [x] Definir los 3 stages obligatorios: `lint/test`, `build`, `deploy`.
+  - [x] Stage `lint/test`: Ejecutar suite de pruebas TDD en backend y frontend (bloquea el pipeline en caso de fallo).
+  - [x] Stage `build`: Construir imágenes Docker con `docker build`.
+  - [x] Stage `deploy`: Despliegue simulado con `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`.
