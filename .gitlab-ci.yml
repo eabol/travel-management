@@ -1,0 +1,82 @@
+stages:
+  - lint/test
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  IMAGE_BACKEND_TAG: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+  IMAGE_FRONTEND_TAG: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+
+# -----------------------------------------------------------------------------
+# Stage 1: lint / test (Ejecución obligatoria de la suite TDD - Bloquea el pipeline)
+# -----------------------------------------------------------------------------
+test:backend:
+  stage: lint/test
+  image: node:24-alpine
+  script:
+    - cd backend
+    - npm ci
+    - npm run test:run
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+test:frontend:
+  stage: lint/test
+  image: node:24-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run test:unit -- --run
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+# -----------------------------------------------------------------------------
+# Stage 2: build (Construcción de imágenes Docker orientadas a producción)
+# -----------------------------------------------------------------------------
+build:backend:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker build -f backend/Dockerfile.prod -t $IMAGE_BACKEND_TAG ./backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+build:frontend:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker build -f frontend/Dockerfile.prod -t $IMAGE_FRONTEND_TAG ./frontend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+# -----------------------------------------------------------------------------
+# Stage 3: deploy (Script simulado usando archivos de producción)
+# -----------------------------------------------------------------------------
+deploy:production:
+  stage: deploy
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - echo "Iniciando despliegue en entorno de producción..."
+    - docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
+    - echo "Despliegue completado exitosamente."
+  environment:
+    name: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
