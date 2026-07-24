@@ -16,9 +16,11 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "pinia": "^4.0.2",
     "vue": "rc",
-    "vue-router": "^5.2.0"
+    "vue-router": "^5.2.0",
+    "vuetify": "^4.1.6"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
