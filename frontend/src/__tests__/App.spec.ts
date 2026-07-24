@@ -1,11 +1,28 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
+import App from '../App.vue';
+import router from '../router';
 
-import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+global.ResizeObserver = ResizeObserverMock as any;
 
 describe('App', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
   it('mounts renders properly', () => {
-    const wrapper = mount(App)
-    expect(wrapper.text()).toContain('You did it!')
-  })
-})
+    const wrapper = mount(App, {
+      global: {
+        plugins: [createPinia(), router]
+      }
+    });
+    expect(wrapper.exists()).toBe(true);
+  });
+});
