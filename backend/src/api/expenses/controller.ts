@@ -40,7 +40,7 @@ const updateStatusSchema = Joi.object({
 export const createTravelExpense = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { error, value } = createExpenseSchema.validate(req.body);
   if (error) {
-    res.status(400).json({ error: error.details[0].message });
+    res.status(400).json({ error: error.details?.[0]?.message || 'Validation error' });
     return;
   }
 
@@ -98,7 +98,7 @@ export const updateTravelExpense = async (req: AuthenticatedRequest, res: Respon
   const { error, value } = updateExpenseSchema.validate(req.body);
 
   if (error) {
-    res.status(400).json({ error: error.details[0].message });
+    res.status(400).json({ error: error.details?.[0]?.message || 'Validation error' });
     return;
   }
 
@@ -208,7 +208,7 @@ export const updateTravelExpenseStatus = async (req: AuthenticatedRequest, res: 
   const { error, value } = updateStatusSchema.validate(req.body);
 
   if (error) {
-    res.status(400).json({ error: error.details[0].message });
+    res.status(400).json({ error: error.details?.[0]?.message || 'Validation error' });
     return;
   }
 
