@@ -1,4 +1,7 @@
-# Historia de Cambios y Registro del Proyecto
+## [2026-07-25] Corrección de Errores de Compilación TypeScript en Backend (`npm run build`)
+- Se instaló `@types/pg` en las dependencias de desarrollo del backend.
+- Se configuraron los patrones `include` y `exclude` en [`backend/tsconfig.json`](file:///home/eabol/coding/travel-management/backend/tsconfig.json) para aislar los archivos fuera de `src/` durante el build.
+- Se corrigieron errores estrictos de tipos en [`backend/src/bin/www.ts`](file:///home/eabol/coding/travel-management/backend/src/bin/www.ts) (`PORT` parseado a número), [`backend/src/middleware/auth.ts`](file:///home/eabol/coding/travel-management/backend/src/middleware/auth.ts) (verificación de token no definido) y [`backend/src/api/expenses/controller.ts`](file:///home/eabol/coding/travel-management/backend/src/api/expenses/controller.ts) (encadenamiento opcional en errores de validación de Joi).
 
 ## [2026-07-24] Documentación Global y Diagrama de Arquitectura Mermaid (`README.md`)
 - Se redactó el documento principal del proyecto [`README.md`](file:///home/eabol/coding/travel-management/README.md).

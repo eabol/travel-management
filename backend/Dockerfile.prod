@@ -14,9 +14,11 @@ RUN npm run build
 # Production Stage
 FROM node:24-alpine AS production
 
-USER node
-
 WORKDIR /app
+
+RUN chown -R node:node /app
+
+USER node
 
 COPY package*.json ./
 

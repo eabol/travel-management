@@ -36,6 +36,11 @@ export const authenticateJwt = async (
 
   const token = authHeader.split(' ')[1];
 
+  if (!token) {
+    res.status(401).json({ error: 'Token is missing' });
+    return;
+  }
+
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     req.user = {
